@@ -1,3 +1,3 @@
 # CpuSmmAlternativea
 
-Alternative CpuSmm Driver for AMD Firmware
+Alternative Smm Driver for AMD Firmware

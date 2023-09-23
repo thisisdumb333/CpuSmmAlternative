@@ -1,13 +1,10 @@
 #include "Smm.h"
 
-unsigned __int64 SetProtectionCallback()
+UINTN SetProtectionCallback()
 {
-	unsigned __int64 result; // rax
-
-	result = AsmReadMsr(0xC0010015) | 0x80000001;
-	AsmWriteMsr(0xC0010015, result);
-	return result;
-
+	UINTN Result = AsmReadMsr(0xC0010015) | 0x80000001;
+	AsmWriteMsr(0xC0010015, Result);
+	return Result;
 }
 
 EFI_STATUS HandlerEntryPoint(UNUSED CONST EFI_HANDLE Handle, UNUSED CONST VOID* Context, CONST VOID* CommBuffer, UNUSED CONST UINTN* CommBufferSize)
@@ -42,6 +39,9 @@ EFI_STATUS CpuSmmSetup()
 
 	if (EFI_ERROR(SmmSwDispatchProtocol->Register(SmmSwDispatchProtocol, (EFI_SMM_HANDLER_ENTRY_POINT2)HandlerEntryPoint, (VOID*)&EFI_SWI_VAL, NULL )))
 		return EFI_SUCCESS;
+
+	gST->ConOut->ClearScreen(gST->ConOut);
+	gST->ConOut->OutputString(gST->ConOut, L"Hello\n");
 
 	return EFI_SUCCESS;
 }

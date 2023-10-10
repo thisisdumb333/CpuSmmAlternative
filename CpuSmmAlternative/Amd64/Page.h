@@ -41,7 +41,6 @@ typedef union _CR3
 
     UINT64 Flags;
 }CR3;
-static_assert(sizeof(CR3) == sizeof(UINT64), "CR3 Size Mismatch");
 
 typedef union _VIRTUAL_ADDRESS
 {

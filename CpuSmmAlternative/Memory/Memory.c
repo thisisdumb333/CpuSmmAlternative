@@ -14,49 +14,48 @@ VOID Cache(CONST UINT64 CR3)
 
 BOOLEAN QueryPhysicalMemory()
 {
-	UINT32 version;
-	UINTN map_size = 0;
-	EFI_MEMORY_DESCRIPTOR* map = 0;
-	UINTN map_key;
-	UINTN descriptor_size;
+	UINT32 Version;
+	UINTN MapSize = 0;
+	EFI_MEMORY_DESCRIPTOR* Map = NULL;
+	UINTN MapKey;
+	UINTN DescriptorSize;
 
-	EFI_STATUS status = gBS->GetMemoryMap(&map_size, map, &map_key, &descriptor_size, &version);
+	EFI_STATUS Status = gBS->GetMemoryMap(&MapSize, Map, &MapKey, &DescriptorSize, &Version);
 	do
 	{
-		status = gBS->AllocatePool(EfiBootServicesData, map_size, (VOID**)&map);
+		Status = gBS->AllocatePool(EfiBootServicesData, MapSize, (VOID**)&Map);
 
-		if (map == NULL)
-		{
+		if (Map == NULL)
 			return FALSE;
-		}
+		
 
-		status = gBS->GetMemoryMap(&map_size, map, &map_key, &descriptor_size, &version);
+		Status = gBS->GetMemoryMap(&MapSize, Map, &MapKey, &DescriptorSize, &Version);
 
-		if (EFI_ERROR(status))
+		if (EFI_ERROR(Status))
 		{
-			gBS->FreePool(map);
-			map = 0;
+			gBS->FreePool(Map);
+			Map = 0;
 		}
 
-	} while (status == EFI_BUFFER_TOO_SMALL);
+	} while (Status == EFI_BUFFER_TOO_SMALL);
 
-	if (map == 0)
+	if (Map == 0)
 		return FALSE;
 
-	UINT32 descriptor_count = (UINT32)map_size / (UINT32)descriptor_size;
+	UINT32 DescriptorCount = (UINT32)MapSize / (UINT32)DescriptorSize;
 
-	EFI_MEMORY_DESCRIPTOR* entry_last = (EFI_MEMORY_DESCRIPTOR*)((char*)map + ((descriptor_count - 1) * descriptor_size));
+	EFI_MEMORY_DESCRIPTOR* EntryLast = (EFI_MEMORY_DESCRIPTOR*)((char*)Map + ((DescriptorCount - 1) * DescriptorSize));
 
 	PhysicalMemoryRange.Start = 0x1000;
 
-	PhysicalMemoryRange.End = entry_last->PhysicalStart + EFI_PAGES_TO_SIZE(entry_last->NumberOfPages);
+	PhysicalMemoryRange.End = EntryLast->PhysicalStart + EFI_PAGES_TO_SIZE(EntryLast->NumberOfPages);
 
-	gBS->FreePool(map);
+	gBS->FreePool(Map);
 
 	return TRUE;
 }
 
-BOOLEAN Read(UINT64 Address, VOID* Buffer, UINT64 Size)
+BOOLEAN VirtualCopy(UINT64 Address, VOID* Buffer, UINT64 Size)
 {
 	if (Address < PhysicalMemoryRange.Start || (Address + Size) > PhysicalMemoryRange.End)
 		return FALSE;
@@ -64,50 +63,45 @@ BOOLEAN Read(UINT64 Address, VOID* Buffer, UINT64 Size)
 	return MemCpy((VOID*)Address, Buffer, Size);
 }
 
-BOOLEAN Write(UINT64 Address, VOID* Buffer, UINT64 Size)
-{
-	if (Address < PhysicalMemoryRange.Start || (Address + Size) > PhysicalMemoryRange.End)
-		return FALSE;
-
-	return MemCpy(Buffer, (VOID*)Address, Size);
-}
-
-UINT64 Translate(UINT64 DirectoryBase, UINT64 VirtualAddress)
+UINT64 Translate(UNUSED UINT64 DirectoryBase, UNUSED UINT64 VirtualAddress)
 {
 
-	// It's fine to return 0 for failure since we don't even allow reads between 0x0-0x1000
+	// It's fine to return 0 for failure since we don't even allow reads between 0x0-0x1000, as no OS uses that physical memory (and can't)
 	return 0;
 }
 
-DRIVER_STATUS ReadPhysicalToVirtual(VOID* Physical, VOID* VirtualBuffer, UINT64 Size)
-{
-	return SUCCESS;
-}
-
-DRIVER_STATUS WriteVirtualToPhysical(VOID* Physical, VOID* VirtualBuffer, UINT64 Size)
-{
-	return SUCCESS;
-}
-
-DRIVER_STATUS ReadVirtualToVirtual(UINT64 TargetDirectoryBase, VOID* SourceVirtualAddress, VOID* DestinationVirtualAddress, UINT64 Size)
+DRIVER_STATUS CopyVirtualMemory(UINT64 SourceDirectoryBase, VOID* SourceVirtualAddress, UINT64 DestinationDirectoryBase, VOID* DestinationVirtualAddress, UINT64 Size)
 {
 	if (Size > MAX_SIZE || Size == 0)
 		return ERROR_OVERFLOW;
 
-	UINT64 BytesToRead = Size;
+	UINT64 BytesToCopy = Size;
 
-	while (BytesToRead > 0)
+	while (BytesToCopy > 0)
 	{
+		// Grab the starting PFNs of the source and destination
+		UINT64 PhysicalSourceAddress	  = Translate(SourceDirectoryBase, (UINT64)SourceVirtualAddress);
+		UINT64 PhysicalDestinationAddress = Translate(DestinationDirectoryBase, (UINT64)DestinationVirtualAddress);
+
+		if (PhysicalSourceAddress == 0 || PhysicalDestinationAddress == 0)
+			return ERROR_INVALID_DIRECTORYBASE;
+
+		// Calculate how many bytes can be copied from the current page for source and destination
+		UINT64 BytesInsideSourcePage = EFI_PAGE_SIZE - ((UINT64)SourceVirtualAddress & EFI_PAGE_MASK);
+		UINT64 BytesInsideDestinationPage = EFI_PAGE_SIZE - ((UINT64)DestinationVirtualAddress & EFI_PAGE_MASK);
+
+		// Determine the smallest value among the bytes inside the source page, destination page, and remaining bytes to copy
+		UINT64 CurrentCopySize = MIN(BytesInsideSourcePage, BytesInsideDestinationPage);
+		CurrentCopySize = MIN(CurrentCopySize, BytesToCopy);
+
+		if (!MemCpy((VOID*)PhysicalDestinationAddress, (VOID*)PhysicalSourceAddress, CurrentCopySize))
+			return ERROR_FAIL;
+
+		SourceVirtualAddress += CurrentCopySize;
+		DestinationVirtualAddress += CurrentCopySize;
+		BytesToCopy -= CurrentCopySize;
 
 	}
-
-	return SUCCESS;
-}
-
-DRIVER_STATUS WriteVirtualToVirtual(UINT64 TargetDirectoryBase, VOID* DestinationVirtualAddress, VOID* SourceVirtualAddress, UINT64 Size)
-{
-	if (Size > MAX_SIZE || Size == 0)
-		return ERROR_OVERFLOW;
 
 	return SUCCESS;
 }

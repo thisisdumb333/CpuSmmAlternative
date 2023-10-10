@@ -67,7 +67,7 @@ UINTN AsmReadMsr(CONST UINTN Register);
 
 VOID AsmWriteMsr(CONST UINTN Register, CONST UINTN Value);
 
-BOOLEAN ReadCpu64(CONST EFI_MM_SAVE_STATE_REGISTER Register, CONST UINT32* Out);
+BOOLEAN ReadCpu64(CONST EFI_MM_SAVE_STATE_REGISTER Register, CONST UINT64* Out);
 BOOLEAN ReadCpu32(CONST EFI_MM_SAVE_STATE_REGISTER Register, CONST UINT32* Out);
 
 BOOLEAN WriteCpu64(CONST EFI_MM_SAVE_STATE_REGISTER Register, CONST UINT64 Value);
@@ -87,7 +87,7 @@ typedef union _XMM
 		UINT8  Operation;
 		UINT8  Status;
 		UINT32 Parameter1;
-		UINT64 Parameter2
+		UINT64 Parameter2;
 	}Buffer1;
 
 	struct

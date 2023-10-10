@@ -47,18 +47,11 @@ typedef struct _PHYSICAL_MEMORY
 VOID Cache(UINT64 DirectoryBase);
 
 BOOLEAN QueryPhysicalMemory();
-BOOLEAN Read(UINT64 Address, VOID* Buffer, UINT64 Size);
-BOOLEAN Write(UINT64 Address, VOID* Buffer, UINT64 Size);
+BOOLEAN VirtualCopy(UINT64 Address, VOID* Buffer, UINT64 Size);
 
 UINT64 Translate(UINT64 DirectoryBase, UINT64 VirtualAddress);
 
-// Uses the caller's DirectoryBase 
-DRIVER_STATUS ReadPhysicalToVirtual(VOID* Physical, VOID* VirtualBuffer, UINT64 Size);
-DRIVER_STATUS WriteVirtualToPhysical(VOID* Physical, VOID* VirtualBuffer, UINT64 Size);
-
-// Uses the TargetDirectoryBase to transfer data
-DRIVER_STATUS ReadVirtualToVirtual(UINT64 TargetDirectoryBase, VOID* SourceVirtualAddress, VOID* DestinationVirtualAddress, UINT64 Size);
-DRIVER_STATUS WriteVirtualToVirtual(UINT64 TargetDirectoryBase, VOID* DestinationVirtualAddress, VOID* SourceVirtualAddress, UINT64 Size);
+DRIVER_STATUS CopyVirtualMemory(UINT64 SourceDirectoryBase, VOID* SourceVirtualAddress, UINT64 DestinationDirectoryBase, VOID* DestinationVirtualAddress, UINT64 Size);
 
 
 #endif

@@ -43,23 +43,29 @@ VOID AsmWriteMsr(CONST UINTN Register, CONST UINTN Value)
     }
 }
 
-BOOLEAN ReadCpu64(CONST EFI_MM_SAVE_STATE_REGISTER Register, CONST UINT32* Out)
+// These functions will be implemented by the OEM
+
+BOOLEAN ReadCpu64(UNUSED CONST EFI_MM_SAVE_STATE_REGISTER Register, UNUSED CONST UINT64* Out)
 {
+    // ..OEM Implementation
     return 0;
 }
 
-BOOLEAN ReadCpu32(CONST EFI_MM_SAVE_STATE_REGISTER Register, CONST UINT32* Out)
+BOOLEAN ReadCpu32(UNUSED CONST EFI_MM_SAVE_STATE_REGISTER Register, UNUSED CONST UINT32* Out)
 {
+    // ..OEM Implementation
     return 0;
 }
 
-BOOLEAN WriteCpu64(CONST EFI_MM_SAVE_STATE_REGISTER Register, CONST UINT64 Value)
+BOOLEAN WriteCpu64(UNUSED CONST EFI_MM_SAVE_STATE_REGISTER Register, UNUSED CONST UINT64 Value)
 {
+    // ..OEM Implementation
     return 0;
 }
 
-BOOLEAN WriteCpu32(CONST EFI_MM_SAVE_STATE_REGISTER Register, CONST UINT32 Value)
+BOOLEAN WriteCpu32(UNUSED CONST EFI_MM_SAVE_STATE_REGISTER Register, UNUSED CONST UINT32 Value)
 {
+    // ..OEM Implementation
     return 0;
 }
 

@@ -66,8 +66,10 @@ EFI_STATUS SmiHandler(UNUSED CONST EFI_HANDLE Handle, UNUSED CONST VOID* Context
 	switch (Operands1.Buffer1.Operation)
 	{
 	case READ:
+		Response.Buffer1.Status = CopyVirtualMemory(Operands1.Buffer1.Parameter2, (VOID*)Operands2.Buffer2.Parameter3, DirectoryBase, (VOID*)Operands2.Buffer2.Parameter4, Operands1.Buffer1.Parameter1);
 		break;
 	case WRITE:
+		Response.Buffer1.Status = CopyVirtualMemory(DirectoryBase, (VOID*)Operands2.Buffer2.Parameter4, Operands1.Buffer1.Parameter2, (VOID*)Operands2.Buffer2.Parameter3, Operands1.Buffer1.Parameter1);
 		break;
 	default:
 		Response.Buffer1.Status = ERROR_INVALID;

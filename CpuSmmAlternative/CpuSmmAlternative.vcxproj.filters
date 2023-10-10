@@ -15,15 +15,27 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c">
+    <ClCompile Include="Main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Smm.c">
+    <ClCompile Include="Firmware\Smm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Memory.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Smm.h">
+    <ClInclude Include="Firmware\Smm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory\Memory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Amd64\Msr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Amd64\Page.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

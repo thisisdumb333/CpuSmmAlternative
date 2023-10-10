@@ -5,6 +5,7 @@
 #include <Uefi.h>
 #include <Protocol/SmmBase2.h>
 #include <Protocol/SmmSwDispatch2.h>
+#include <Protocol/SmmCpu.h>
 #pragma warning(pop)
 
 #define UNUSED __attribute__((unused))
@@ -35,20 +36,26 @@ extern EFI_SMM_SYSTEM_TABLE2* gSMST;
 ///
 extern EFI_SMM_BASE2_PROTOCOL* gSMMB2P;
 
+extern EFI_SMM_CPU_PROTOCOL* gSmmCpu;
 
 ///
 /// GUID's for various SMM protocols used
 ///
 extern EFI_GUID gEfiSmmBase2ProtocolGuid;
 extern EFI_GUID gEfiSmmSwDispatch2ProtocolGuid;
-
+extern EFI_GUID gEfiSmmCpuProtocolGuid;
 ///
 /// SWI_VAL
 /// 
 extern CONST UINTN EFI_SWI_VAL;
 
 ///
-/// GUID's for various SMM protocols used
+/// Callback Handle for SMI interrupt
+///
+extern EFI_HANDLE gCallbackHandle;
+
+///
+/// CommBuffer structure used by MSI
 ///
 typedef struct  _COMM_BUFFER
 {
@@ -56,8 +63,48 @@ typedef struct  _COMM_BUFFER
 	UINT8 SWI_VAL;
 }COMM_BUFFER;
 
-UINTN AsmReadMsr(UINTN Register);
+UINTN AsmReadMsr(CONST UINTN Register);
 
-VOID AsmWriteMsr(UINTN Register, UINTN Value);
+VOID AsmWriteMsr(CONST UINTN Register, CONST UINTN Value);
+
+BOOLEAN ReadCpu64(CONST EFI_MM_SAVE_STATE_REGISTER Register, CONST UINT32* Out);
+BOOLEAN ReadCpu32(CONST EFI_MM_SAVE_STATE_REGISTER Register, CONST UINT32* Out);
+
+BOOLEAN WriteCpu64(CONST EFI_MM_SAVE_STATE_REGISTER Register, CONST UINT64 Value);
+BOOLEAN WriteCpu32(CONST EFI_MM_SAVE_STATE_REGISTER Register, CONST UINT32 Value);
+
+typedef union _XMM
+{
+	struct
+	{
+		UINT64 Low;
+		UINT64 High;
+	} Value;
+
+	struct
+	{
+		UINT16 Key;
+		UINT8  Operation;
+		UINT8  Status;
+		UINT32 Parameter1;
+		UINT64 Parameter2
+	}Buffer1;
+
+	struct
+	{
+		UINT64 Parameter3;
+		UINT64 Parameter4;
+	}Buffer2;
+
+}XMM;
+
+
+XMM ReadXmm5();
+VOID WriteXmm5(CONST XMM Value);
+
+XMM ReadXmm6();
+VOID WriteXmm6(CONST XMM Value);
+
+BOOLEAN MemCpy(VOID* Source, VOID* Destination, UINT64 Size);
 
 #endif
